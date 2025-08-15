@@ -1,8 +1,10 @@
 # A2C-SMCP Remote Invocation Protocol (Agent To Computer SMCP)
 
-## 📖 [中文文档](./READMD.zh.md)
+## [中文文档](./READMD.zh.md)
 
 - 👉 点击此处跳转至 [中文文档](./READMD.zh.md)
+
+> **Tips:** Our documentation is originally written in Chinese and translated into English using LLMs. While we strive for accuracy, the English version may not be 100% precise. If you are a Chinese reader, we recommend referring to the Chinese documentation for the most accurate information.
 
 ## Design Goals & Background
 
@@ -349,7 +351,6 @@ class SMCPAgentClient(Client):
 | `notify:tool_call_cancel` | S→Broadcast | Cancel tool call | `AgentCallData` |
 | `notify:enter_office` | S→Broadcast | Member join | `EnterOfficeNotification` |
 | `notify:leave_office` | S→Broadcast | Member leave | `LeaveOfficeNotification` |
-
 
 ## Roadmap
 
