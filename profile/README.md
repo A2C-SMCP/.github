@@ -1,274 +1,278 @@
-# A2C-SMCP远程调用协议 (Agent To Computer SMCP)
+# A2C-SMCP Remote Invocation Protocol (Agent To Computer SMCP)
 
-## 设计目标与背景
+## 📖 [中文文档](./READMD.zh.md)
 
-A2C-SMCP（旨在解决MCP协议在Agent系统中的核心痛点：
+- 👉 点击此处跳转至 [中文文档](./READMD.zh.md)
 
-1. **多MCP服务管理问题**  
-   引入`Computer`概念统一管理主机上的多个MCP服务，简化Agent与多工具服务交互
+## Design Goals & Background
 
-2. **工具权限与安全挑战**  
-   - 工具鉴权（如Token过期/权限过高问题）
-   - 证书管理（如Office版权归属问题）
-   - 网络依赖（跨域请求、内网穿透、代理管理）
+A2C-SMCP addresses core pain points of the MCP protocol in Agent systems:
 
-A2C-SMCP 旨在解决传统MCP协议在复杂Agent系统中面临的关键挑战。我们通过两个核心场景说明设计动机：
+1. **Multi-MCP Service Management**  
+   Introduces `Computer` concept to unify management of multiple MCP services on a host, simplifying Agent interaction with multiple tool services.
 
-### 场景1：工具服务海啸问题（多MCP管理困境）
-**背景示例**  
-某企业AI团队开发的采购Agent需要协调：
-- 本地Excel工具（处理采购清单）
-- 云端合同生成服务
-- 内部ERP系统接口
-- 供应商比价爬虫工具
+2. **Tool Permission & Security Challenges**  
+   - Tool authentication (e.g., token expiration/over-privileging)
+   - Certificate management (e.g., Office license ownership)
+   - Network dependencies (cross-origin requests, intranet penetration, proxy management)
 
-**MCP痛点**  
+A2C-SMCP solves key challenges faced by traditional MCP protocols in complex Agent systems. We illustrate the design motivation through two core scenarios:
+
+### Scenario 1: Tool Service Tsunami (Multi-MCP Management Dilemma)
+**Example Context**  
+A corporate AI team's procurement Agent needs to coordinate:
+- Local Excel tools (processing purchase lists)
+- Cloud contract generation services
+- Internal ERP system interfaces
+- Vendor price comparison crawler tools
+
+**MCP Pain Points**  
 ```mermaid
 graph TD
-    A[采购Agent] --> B[Excel MCP]
-    A --> C[合同生成MCP]
-    A --> D[ERP接口MCP]
-    A --> E[爬虫工具MCP]
+    A[Procurement Agent] --> B[Excel MCP]
+    A --> C[Contract Gen MCP]
+    A --> D[ERP Interface MCP]
+    A --> E[Crawler Tool MCP]
 ```
-- 🤯 **管理黑洞**：Agent需单独维护每个MCP的生命周期
-- 💔 **断连风险**：任一MCP崩溃导致整个采购流程失败
-- 🚫 **资源浪费**：空闲MCP持续占用系统资源
+- 🤯 **Management Black Hole**: Agent must individually maintain each MCP lifecycle
+- 💔 **Disconnection Risks**: Crash of any MCP fails entire procurement process
+- 🚫 **Resource Waste**: Idle MCPs continuously consume system resources
 
-**SMCP解决方案**  
+**SMCP Solution**  
 ```mermaid
 graph TD
-    A[采购Agent] --> F{采购Computer}
+    A[Procurement Agent] --> F{Procurement Computer}
     F --> B[Excel MCP]
-    F --> C[合同生成MCP]
-    F --> D[ERP接口MCP]
-    F --> E[爬虫工具MCP]
+    F --> C[Contract Gen MCP]
+    F --> D[ERP Interface MCP]
+    F --> E[Crawler Tool MCP]
 ```
-- 🛡️ **故障隔离**：单个MCP崩溃不影响Computer整体
-- 📡 **热插拔支持**：动态增删工具无需重启Agent
-- ⚙️ **统一监护**：Computer内部实施服务健康监测
+- 🛡️ **Fault Isolation**: Single MCP crash doesn't affect entire Computer
+- 📡 **Hot-Plug Support**: Dynamically add/remove tools without Agent restart
+- ⚙️ **Unified Monitoring**: Computer internally implements service health checks
 
 ---
 
-### 场景2：企业级工具安全困境
-**敏感工具案例**  
-财务部门需要：
-- ⚖️ 用本地安装的Office处理报表（版权限制）
-- 🔑 通过VPN访问银行系统（双因素认证）
-- 📊 操作SAP财务模块（角色权限管理）
+### Scenario 2: Enterprise Tool Security Dilemma
+**Sensitive Tool Cases**  
+Finance department requires:
+- ⚖️ Local Office for reports (license restrictions)
+- 🔑 Bank system access via VPN (2FA)
+- 📊 SAP financial module operations (role permissions)
 
-**传统MCP缺陷**  
+**Traditional MCP Defects**  
 
-| 安全问题 | 后果示例 | 发生频率 |
+| Security Issue | Example Consequence | Frequency |
 |----------|----------|----------|
-| **硬编码Token** | 财务Token泄露造成百万损失 | 高危 ⚠️ |
-| **公网暴露端口** | SAP接口遭勒索软件攻击 | 频发 🔥 |
-| **证书冲突** | 多用户共享Office触发版权审计 | 中危 ⚠️ |
+| **Hardcoded Tokens** | Financial token leak → $1M loss | Critical ⚠️ |
+| **Public Port Exposure** | SAP interface ransomware attack | Frequent 🔥 |
+| **Certificate Conflict** | Shared Office triggers license audit | Medium ⚠️ |
 
-**SMCP安全架构**  
+**SMCP Security Architecture**  
 ```mermaid
 sequenceDiagram
-    participant A as 财务Agent
+    participant A as Finance Agent
     participant S as SMCP Server
-    participant C as 财务Computer
-    participant T as 本地Office
+    participant C as Finance Computer
+    participant T as Local Office
     
-    A->>S: 加密请求
-    S->>C: 信令转发
-    C->>T: 本地工具调用
-    T->>C: 结果签名
-    C->>S: 加密返回
-    S->>A: 最终结果
+    A->>S: Encrypted request
+    S->>C: Signal forwarding
+    C->>T: Local tool invocation
+    T->>C: Signed result
+    C->>S: Encrypted return
+    S->>A: Final result
 ```
-关键保护层：
-1. 🔐 **零凭证传播**：敏感Token仅存在本地Computer
-2. 🌐 **无公网暴露**：Computer通过长连接主动对接
-3. 🏷️ **设备绑定**：Office许可证与特定Computer硬件绑定
+Key Protection Layers:
+1. 🔐 **Zero Credential Propagation**: Sensitive tokens only exist locally
+2. 🌐 **No Public Exposure**: Computers connect via long-lived channels
+3. 🏷️ **Device Binding**: Office licenses bound to specific hardware
 
 ---
 
-### 核心解决方案
+### Core Solutions
 
-| 问题类型 | A2C-SMCP解决方案 |
+| Problem Type | A2C-SMCP Solution |
 |---------|-----------------|
-| **多服务管理** | Computer抽象层聚合多个MCP服务 |
-| **权限安全** | 房间隔离+角色绑定机制 |
-| **网络穿透** | Socket.IO长连接+信令服务器 |
-| **证书管理** | Computer绑定物理设备所有权 |
+| **Multi-Service Mgmt** | Computer abstraction layer aggregates MCP services |
+| **Permission Security** | Room isolation + role binding |
+| **Network Penetration** | Socket.IO long connections + signaling server |
+| **Certificate Mgmt** | Computer-bound physical device ownership |
 
-## 协议基础设计
+## Protocol Foundation
 
-### 角色定义
+### Role Definitions
 
-| 角色 | 数量限制 | 描述 | 连接特性 |
+| Role | Quantity Limit | Description | Connection Properties |
 |------|---------|------|---------|
-| **Computer** | 多台(≥1) | 工具服务提供者(MCP宿主) | 单房间绑定 |
-| **Agent** | 1台/房间 | 工具调用发起方 | 多房间支持 |
-| **Server** | 1台 | 信令服务器(连接管理+消息路由) | 全局中枢 |
+| **Computer** | Multiple (≥1) | Tool service provider (MCP host) | Single-room binding |
+| **Agent** | 1 per room | Tool invocation initiator | Multi-room support |
+| **Server** | 1 | Signaling server (connection mgmt + message routing) | Global hub |
 
-### 核心交互模型
+### Core Interaction Model
 ```mermaid
 graph LR
     A[Agent] -->|EmitEvent| S[Server]
     C1[Computer1] -->|EmitEvent| S
     C2[Computer2] -->|EmitEvent| S
-    S -->|广播通知/路由消息| A
-    S -->|广播通知/路由消息| C1
-    S -->|广播通知/路由消息| C2
+    S -->|Broadcast/Routing| A
+    S -->|Broadcast/Routing| C1
+    S -->|Broadcast/Routing| C2
 ```
 
-### 命名空间设计
+### Namespace Design
 ```python
-# 核心协议命名空间
+# Core protocol namespace
 SMCP_NAMESPACE = "/smcp"
 
-# 事件类别规则:
-# client:  Agent发起→Computer执行
-# server:  客户端发起→Server处理
-# notify:  Server发起→广播通知
+# Event category rules:
+# client:  Agent→Computer execution
+# server:  Client→Server processing
+# notify:  Server→Broadcast
 ```
 
-## 房间(Room)机制
+## Room Mechanism
 
-### 房间管理规范
+### Room Management Rules
 
-1. **房间标识**  
-   `office_id` = `robot_id` (确保全局唯一性)
+1. **Room Identification**  
+   `office_id` = `robot_id` (ensures global uniqueness)
    
-2. **加入流程**  
+2. **Join Process**  
    ```mermaid
    sequenceDiagram
        participant C as Computer/Agent
        participant S as Server
        C->>S: server:join_office
-       S->>S: 校验角色权限
-       alt 校验通过
-           S->>C: 加入房间
+       S->>S: Verify role permissions
+       alt Verification passed
+           S->>C: Join room
            S->>Room: notify:enter_office
-       else 校验失败
-           S->>C: 返回错误
+       else Verification failed
+           S->>C: Return error
        end
    ```
 
-3. **成员变更通知**
+3. **Member Change Notifications**
 
    ```python
-   # 加入通知结构
+   # Join notification structure
    class EnterOfficeNotification(TypedDict, total=False):
        office_id: str
-       computer: Optional[str]  # 新加入的Computer
-       agent: Optional[str]     # 新加入的Agent
+       computer: Optional[str]  # New Computer
+       agent: Optional[str]     # New Agent
 
-   # 离开通知结构
+   # Leave notification structure
    class LeaveOfficeNotification(TypedDict, total=False):
        office_id: str
-       computer: Optional[str]  # 离开的Computer
-       agent: Optional[str]     # 离开的Agent
+       computer: Optional[str]  # Departing Computer
+       agent: Optional[str]     # Departing Agent
    ```
 
-### 隔离保障机制
+### Isolation Mechanisms
 
-| 限制类型 | 触发条件 | 服务端响应 |
+| Restriction Type | Trigger Condition | Server Response |
 |---------|---------|-----------|
-| **Agent独占** | 房间已有Agent时新Agent加入 | `Agent sid should be equal to office_id` |
-| **Computer绑定** | Computer尝试加入新房间 | 自动断开旧房间 |
-| **权限边界** | 跨房间访问请求 | 自动拒绝路由 |
+| **Agent Exclusivity** | New Agent joins occupied room | `Agent sid should equal office_id` |
+| **Computer Binding** | Computer attempts to join new room | Auto-disconnect from old room |
+| **Permission Boundary** | Cross-room access attempts | Auto-reject routing |
 
-## 消息协议规范
+## Message Protocol Specification
 
-### 事件分类体系
+### Event Taxonomy
 
-| 类别 | 前缀 | 方向 | 示例 |
+| Category | Prefix | Direction | Example |
 |------|------|------|------|
-| **工具操作** | `client:` | Agent→Computer | `client:tool_call` |
-| **房间管理** | `server:` | 客户端→Server | `server:join_office` |
-| **状态通知** | `notify:` | Server→广播 | `notify:enter_office` |
+| **Tool Operations** | `client:` | Agent→Computer | `client:tool_call` |
+| **Room Management** | `server:` | Client→Server | `server:join_office` |
+| **Status Notifications** | `notify:` | Server→Broadcast | `notify:enter_office` |
 
-### 核心事件列表
+### Core Events
 
-| 事件名称 | 发起方            | 描述 | 数据结构 |
+| Event Name | Initiator | Description | Data Structure |
 |---------|----------------|------|----------|
-| `client:tool_call` | Agent          | 工具调用请求<br>Tool call request | `ToolCallReq` |
-| `client:get_mcp_config` | Agent          | 获取MCP配置<br>Get MCP config | `GetMCPConfigReq` |
-| `client:get_tools` | Agent          | 获取工具列表<br>Get tools list | `GetToolsReq` |
-| `server:join_office` | Computer/Agent | 加入房间请求<br>Join office request | `EnterOfficeReq` |
-| `server:leave_office` | Computer/Agent | 离开房间请求<br>Leave office request | `LeaveOfficeReq` |
-| `server:update_mcp_config` | Computer       | 更新MCP配置请求<br>Update MCP config request | `UpdateMCPConfigReq` |
-| `server:tool_call_cancel` | Agent          | 取消工具调用请求<br>Cancel tool call request | `ToolCallCancelReq` |
-| `notify:tool_call_cancel` | Server         | 工具调用被取消通知<br>Tool call canceled notification | `ToolCallCancelNotification` |
-| `notify:enter_office` | Server         | 成员加入通知<br>Member entered notification | `EnterOfficeNotification` |
-| `notify:leave_office` | Server         | 成员离开通知<br>Member left notification | `LeaveOfficeNotification` |
-| `notify:update_mcp_config` | Server         | 配置更新通知<br>Config updated notification | `UpdateMCPConfigNotification` |
+| `client:tool_call` | Agent | Tool invocation request | `ToolCallReq` |
+| `client:get_mcp_config` | Agent | Get MCP configuration | `GetMCPConfigReq` |
+| `client:get_tools` | Agent | Get tools list | `GetToolsReq` |
+| `server:join_office` | Computer/Agent | Join room request | `EnterOfficeReq` |
+| `server:leave_office` | Computer/Agent | Leave room request | `LeaveOfficeReq` |
+| `server:update_mcp_config` | Computer | Update MCP config | `UpdateMCPConfigReq` |
+| `server:tool_call_cancel` | Agent | Cancel tool call | `ToolCallCancelReq` |
+| `notify:tool_call_cancel` | Server | Tool cancellation notice | `ToolCallCancelNotification` |
+| `notify:enter_office` | Server | Member join notice | `EnterOfficeNotification` |
+| `notify:leave_office` | Server | Member leave notice | `LeaveOfficeNotification` |
+| `notify:update_mcp_config` | Server | Config update notice | `UpdateMCPConfigNotification` |
 
-### 核心数据结构
+### Core Data Structures
 
 ```python
-# 工具调用请求
+# Tool invocation request
 class ToolCallReq(TypedDict):
-    robot_id: str     # Agent标识
-    req_id: str       # 请求UUID
-    computer: str     # 目标Computer
-    tool_name: str    # 工具名称
-    params: dict      # 调用参数
-    timeout: int      # 超时时间(秒)
+    robot_id: str     # Agent ID
+    req_id: str       # Request UUID
+    computer: str     # Target Computer
+    tool_name: str    # Tool name
+    params: dict      # Parameters
+    timeout: int      # Timeout (seconds)
 
-# MCP配置结构
+# MCP configuration
 class MCPServerConfig(TypedDict):
     type: Literal["stdio", "http", "sse"]
-    url: NotRequired[str]          # HTTP/SSE模式必需
-    command: NotRequired[str]      # 命令行模式必需
-    disabled: bool                # 是否禁用
-    tool_meta: dict[str, dict]    # 工具元数据
+    url: NotRequired[str]          # Required for HTTP/SSE
+    command: NotRequired[str]      # Required for CLI mode
+    disabled: bool                # Disabled flag
+    tool_meta: dict[str, dict]    # Tool metadata
 ```
 
-## 核心交互流程
+## Core Workflows
 
-### 工具调用流程
+### Tool Invocation Flow
 ```mermaid
 sequenceDiagram
     participant A as Agent
     participant S as Server
     participant C as Computer
     
-    A->>S: client:tool_call(请求参数)
-    S->>C: 转发请求(client:tool_call)
-    C->>S: 执行结果(返回数据)
-    S->>A: 返回工具结果
+    A->>S: client:tool_call(params)
+    S->>C: Forward request(client:tool_call)
+    C->>S: Execution result
+    S->>A: Return tool result
 ```
 
-### 动态工具发现
+### Dynamic Tool Discovery
 ```mermaid
 sequenceDiagram
     participant A as Agent
     participant S as Server
     participant C as Computer
     
-    Note over A: Computer加入房间
+    Note over A: Computer joins room
     S->>A: notify:enter_office
     A->>S: client:get_tools
-    S->>C: 转发请求
-    C->>S: 工具列表响应
-    S->>A: 返回工具列表
-    Note over A: 注册新工具到机器人
+    S->>C: Forward request
+    C->>S: Tools list response
+    S->>A: Return tools list
+    Note over A: Register new tools
 ```
 
-## 错误处理规范（TODO 尚未实现 | 以下标准也正在讨论中）
+## Error Handling (TODO | Under Discussion)
 
-### 错误代码表
+### Error Codes
 
-| 代码 | 含义 | 触发场景 |
+| Code | Meaning | Trigger Scenario |
 |------|------|---------|
-| 400 | 无效请求格式 | 数据结构校验失败 |
-| 403 | 权限违规 | 角色限制冲突 |
-| 404 | 资源不存在 | 工具/Computer不存在 |
-| 408 | 请求超时 | 操作执行超时 |
-| 500 | 内部错误 | 服务端异常 |
+| 400 | Invalid request format | Data validation failure |
+| 403 | Permission violation | Role conflict |
+| 404 | Resource not found | Tool/Computer missing |
+| 408 | Request timeout | Operation timeout |
+| 500 | Internal error | Server exception |
 
-### 错误响应格式
+### Error Response Format
 ```python
 {
   "error": {
     "code": 404,
-    "message": "请求的工具不存在",
+    "message": "Requested tool not found",
     "details": {
       "toolId": "invalid-tool-id"
     }
@@ -276,80 +280,80 @@ sequenceDiagram
 }
 ```
 
-## 协议实现架构（以Python为例）
+## Implementation Architecture (Python Example)
 
-### Server架构
+### Server Architecture
 ```python
 class SMCPNamespace(TFRSNamespace):
     async def on_server_join_office(self, sid, data):
-        # 实现房间加入逻辑
+        # Implement room joining logic
         
     async def on_client_tool_call(self, sid, data):
-        # 路由工具调用请求
+        # Route tool invocation requests
         
     async def enter_room(self, sid, room):
-        # 房间加入的核心实现
+        # Core room joining implementation
         if role == "agent":
-            # Agent单房间校验
+            # Agent single-room validation
         else:
-            # Computer房间切换处理
+            # Computer room switching
 ```
 
-### Agent客户端
+### Agent Client
 ```python
 class SMCPAgentClient(Client):
     def emit_tool_call(self, computer, tool_name, params, expires):
-        # 发送工具调用请求
+        # Send tool invocation request
         
     def on_computer_enter_office(self, data):
-        # 处理新Computer通知
-        # 自动获取工具列表并注册
+        # Handle new Computer notification
+        # Auto-fetch and register tools
         
     def on_computer_update_mcp_config(self, data):
-        # 处理配置更新
-        # 刷新工具集
+        # Handle config updates
+        # Refresh toolset
 ```
 
-## 协议优势总结
+## Protocol Advantages
 
-1. **工具热管理**  
-   - 动态发现/注册工具
-   - 配置热更新支持
+1. **Tool Hot Management**  
+   - Dynamic discovery/registration
+   - Hot config updates
 
-2. **安全隔离**  
-   - Agent-Computer 1:1绑定
-   - 基于房间的权限边界
+2. **Security Isolation**  
+   - 1:1 Agent-Computer binding
+   - Room-based permission boundaries
 
-3. **网络穿透优化**  
-   - Socket.IO长连接
-   - 免除公网IP依赖
+3. **Network Optimization**  
+   - Socket.IO long connections
+   - No public IP dependency
 
-4. **弹性架构**  
-   - 多Computer支持
-   - 分布式工具部署
+4. **Elastic Architecture**  
+   - Multi-Computer support
+   - Distributed tool deployment
 
-5. **标准化接口**  
-   - 强类型数据结构
-   - 明确的事件边界
+5. **Standardized Interface**  
+   - Strongly-typed data
+   - Clear event boundaries
 
-## 附录：完整事件列表
+## Appendix: Complete Event List
 
-| 事件名称 | 方向    | 描述     | 数据结构 |
+| Event Name | Direction | Description | Data Structure |
 |----------|-------|--------|---------|
-| `client:tool_call` | A→C   | 工具调用请求 | `ToolCallReq` |
-| `client:get_tools` | A→C   | 获取工具列表 | `GetToolsReq` |
-| `client:get_mcp_config` | A→C   | 获取MCP配置 | `GetMCPConfigReq` |
-| `server:join_office` | A/C→S | 加入房间 | `EnterOfficeReq` |
-| `server:leave_office` | A/C→S | 离开房间   | `LeaveOfficeReq` |
-| `server:update_mcp_config` | C→S   | 更新配置请求 | `UpdateMCPConfigReq` |
-| `notify:tool_call_cancel` | S→广播  | 取消工具调用 | `AgentCallData` |
-| `notify:enter_office` | S→广播  | 成员加入通知 | `EnterOfficeNotification` |
-| `notify:leave_office` | S→广播  | 成员离开通知 | `LeaveOfficeNotification` |
+| `client:tool_call` | A→C | Tool invocation | `ToolCallReq` |
+| `client:get_tools` | A→C | Get tools list | `GetToolsReq` |
+| `client:get_mcp_config` | A→C | Get MCP config | `GetMCPConfigReq` |
+| `server:join_office` | A/C→S | Join room | `EnterOfficeReq` |
+| `server:leave_office` | A/C→S | Leave room | `LeaveOfficeReq` |
+| `server:update_mcp_config` | C→S | Update config | `UpdateMCPConfigReq` |
+| `notify:tool_call_cancel` | S→Broadcast | Cancel tool call | `AgentCallData` |
+| `notify:enter_office` | S→Broadcast | Member join | `EnterOfficeNotification` |
+| `notify:leave_office` | S→Broadcast | Member leave | `LeaveOfficeNotification` |
 
 
 ## Roadmap
 
-- 实现对错误处理模式的定义与实现
-- 实现对 MCP 协议中 Resources 的管理，方便Agent使用。
-- 实现对 MCP 协议中 Prompts 的管理，方便Agent使用。
-- 实现与OpenTelemetry的集成，支持将A2C-SMCP调用链的数据连接到目前的用户请求调用链（触发A2C协议的请求）
+- Implement error handling patterns
+- Add MCP Resources management for Agent usage
+- Implement MCP Prompts management
+- Integrate with OpenTelemetry to connect A2C-SMCP call chains with user request traces

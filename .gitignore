@@ -1,0 +1,31 @@
+# PyCharm
+# 忽略 PyCharm 项目配置文件和工作区文件
+# Ignore PyCharm project config and workspace files
+.idea/
+*.iml
+# 忽略 PyCharm 生成的临时文件，如调试配置等
+# Ignore PyCharm generated temp files, such as run configs, etc.
+*.pyc
+__pycache__/
+# 忽略 PyCharm 远程解释器缓存
+# Ignore PyCharm remote interpreter caches
+.idea/.idea_modules/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+.idea/assetWizardSettings.xml
+.idea/dataSources/
+.idea/dataSources.ids
+.idea/dataSources.xml
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+.idea/gradle.xml
+.idea/libraries/
+# 忽略本地环境配置
+# Ignore local environment configs
+.env
+.env.*
