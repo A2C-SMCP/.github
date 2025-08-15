@@ -53,6 +53,17 @@ graph TD
 - 📡 **Hot-Plug Support**: Dynamically add/remove tools without Agent restart
 - ⚙️ **Unified Monitoring**: Computer internally implements service health checks
 
+A2C-SMCP introduces the concept of a "Computer" between Agents and tools, which significantly simplifies unified 
+management of multiple tools as well as security and copyright challenges. The implementation of `Computer` is based 
+on the MCP protocol, so in principle, tool developers only need to implement the MCP protocol without any additional 
+adaptation (original MCP Server developers do not need to make any changes).
+
+The A2C-SMCP protocol is mainly integrated and customized by Agent developers, and tool developers do not need to pay 
+attention to the specific implementation details of the protocol. At the same time, Agent developers do not need to 
+worry about deep coupling with frameworks. The protocol is carefully designed so that only the interfaces specified by 
+the protocol need to be implemented in the Agent framework to complete the integration. A2C-SMCP does not impose any 
+mandatory requirements on the selection of Agent frameworks.
+
 ---
 
 ### Scenario 2: Enterprise Tool Security Dilemma
